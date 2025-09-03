@@ -1,0 +1,23 @@
+{
+  "name": "company-policy-bot",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@ai-sdk/groq": "^2.0.14",
+    "@langchain/community": "^0.3.53",
+    "@langchain/core": "^0.3.72",
+    "@langchain/pinecone": "^0.2.0",
+    "@pinecone-database/pinecone": "5",
+    "ai": "^5.0.22",
+    "groq-sdk": "^0.30.0",
+    "langchain": "^0.3.31",
+    "pdf-parse": "^1.1.1"
+  }
+}
