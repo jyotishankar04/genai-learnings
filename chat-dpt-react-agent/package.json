@@ -4,7 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run agent.js"
+    "dev": "bun run agent.js",
+    "biryani": "bun run biryani-graph.js",
+    "graph": "bun run graph.js"
   },
   "devDependencies": {
     "@types/bun": "latest"
