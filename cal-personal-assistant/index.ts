@@ -46,14 +46,22 @@ const graph = new StateGraph(MessagesAnnotation).addNode("callModel", callModel)
     })
 
 const app = graph.compile()
- 
+
 async function main() {
-    const result = await app.invoke({ 
+    const result = await app.invoke({
         messages: [
-            { role: "user", content: "Is there any kafka class in my calendar from last 3 years" }
+            // { role: "user", content: "Is there any meeting tommorrow" }
+            // {
+            //     role: "user",
+            //     content: "Create a event in my calendar with patrajyotishankar@gmail.com tommorrow at 9am called Design Frontend discussion "
+            // }
+            {
+                role: "user",
+                content: "How many events i have tommorrow in my calendar"
+            }
         ]
-     })
-    console.log('AI: ',result.messages[result.messages.length - 1]?.content);
+    })
+    console.log('AI: ', result.messages[result.messages.length - 1]?.content);
 }
 
 main()

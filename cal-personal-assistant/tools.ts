@@ -2,6 +2,9 @@ import { tool } from "@langchain/core/tools";
 import { google } from "googleapis";
 import { z } from "zod";
 import tokens from "./tokens.json";
+import crypto from "crypto";
+
+
 const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
@@ -9,14 +12,14 @@ const oauth2Client = new google.auth.OAuth2(
 )
 
 oauth2Client.setCredentials(tokens);
-
+const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
 export const getCalendarEvents = tool(
-    async ({ query,timeMax,timeMin }) => {
-        let events:any = [];
+    async ({ query, timeMax, timeMin }) => {
+        let events: any = [];
         console.log("✅ getEvents tool CALLED with query: ", query);
         try {
-            const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
             const res = await calendar.events.list({
                 calendarId: 'primary',
                 q: query,
@@ -47,39 +50,6 @@ export const getCalendarEvents = tool(
         }
         console.log(events)
         return JSON.stringify(events);
-        // return JSON.stringify([
-        //     {
-        //         date: "2026-01-01",
-        //         title: "My calendar event",
-        //         description: "This is a description of my calendar event.",
-        //         link: "https://example.com",
-        //         location: "My location",
-        //         recipient: ["H6kXo@example.com"],
-        //         status: "CONFIRMED",
-        //         startDateTime: "2023-01-01T00:00:00Z",
-        //         endDateTime: "2023-01-01T01:00:00Z"
-        //     }, {
-        //         date: "2025-01-01",
-        //         title: "My calendar event",
-        //         description: "This is a description of my calendar event.",
-        //         link: "https://example.com",
-        //         location: "My location",
-        //         recipient: ["H6kXo@example.com"],
-        //         status: "CONFIRMED",
-        //         startDateTime: "2023-01-01T00:00:00Z",
-        //         endDateTime: "2023-01-01T01:00:00Z"
-        //     },{
-        //         date: "2025-09-11",
-        //         title: "My calendar event",
-        //         description: "This is a description of my calendar event.",
-        //         link: "https://example.com",
-        //         location: "My location",
-        //         recipient: ["H6kXo@example.com"],
-        //         status: "CONFIRMED",
-        //         startDateTime: "2023-01-01T00:00:00Z",
-        //         endDateTime: "2023-01-01T01:00:00Z"
-        //     }
-        // ])
     },
     {
         name: "getCalendarEvents",
@@ -91,23 +61,56 @@ export const getCalendarEvents = tool(
         }),
     }
 );
+type attendees = {
+    email: string
+    displayName: string
+}
+
+type EventData = {
+    summary: string;
+
+    start: {
+        timeZone: string;
+        dateTime: string;
+    };
+    end: {
+        timeZone: string;
+        dateTime: string;
+    };
+    attendees: attendees[];
+    description: string
+}
 
 export const createCalendarEvent = tool(
-    async (input: any ) => {
-        const { title, description, startDateTime, endDateTime, recipient } = input as {
-            title: string;
-            description: string;
-            startDateTime: string;
-            endDateTime: string;
-            recipient: string[];
-        };
-        return JSON.stringify({
-            title,
-            description,
-            startDateTime,
-            endDateTime,
-            recipient
-        });
+    async ({ title, description, start, end, attendees }) => {
+        let event: any = [];
+        try {
+            event = await calendar.events.insert({
+                calendarId: "primary",
+                sendUpdates: "all",
+                requestBody: {
+                    summary: title,
+                    description: description,
+                    start: start,
+                    end: end,
+                    attendees: attendees,
+                    conferenceData: {
+                        createRequest: {
+                            requestId: crypto.randomUUID(),
+                            conferenceSolutionKey: {
+                                type: "hangoutsMeet"
+                            }
+                        }
+                    }
+                },
+                conferenceDataVersion:1
+            })
+            console.log(event.data);
+        } catch (error) {
+            console.log(error);
+        }
+
+        return JSON.stringify(event)
     },
     {
         name: "createCalendarEvent",
@@ -115,9 +118,9 @@ export const createCalendarEvent = tool(
         schema: z.object({
             title: z.string().describe("The title of the calendar event."),
             description: z.string().describe("The description of the calendar event."),
-            startDateTime: z.string().describe("The start date and time of the calendar event."),
-            endDateTime: z.string().describe("The end date and time of the calendar event."),
-            recipient: z.array(z.string()).describe("The list of recipient email addresses."),
-        }),
+            start: z.object({ dateTime: z.string(), timeZone: z.string() }).describe("The start date and time of the calendar event."),
+            end: z.object({ dateTime: z.string(), timeZone: z.string().describe("The end date and time of the calendar event. by default it will Kolkata time zone") }).describe("The end date and time of the calendar event."),
+            attendees: z.array(z.object({ email: z.string(), displayName: z.string() })).describe("The attendees of the calendar event."),
+        })
     }
 );
