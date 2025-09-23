@@ -1,15 +1,22 @@
 import { ChatGroq } from "@langchain/groq";
-import { createCalendarEvent, getCalendarEvents, } from "./tools";
-import { END, MessagesAnnotation, StateGraph } from "@langchain/langgraph"
+import { createCalendarEvent, deleteCalendarEvent, getCalendarEvents, TavilyWebSearch, updateCalendarEvent, } from "./tools";
+import { END, MemorySaver, MessagesAnnotation, StateGraph } from "@langchain/langgraph"
 import { ToolNode } from "@langchain/langgraph/prebuilt";
+import readline from "readline/promises";
 import { type AIMessage, isAIMessage } from "@langchain/core/messages";
+
+
 
 const GROQ_MODEL_NAME = process.env.GROQ_MODEL_NAME;
 const tools = [
     createCalendarEvent,
-    getCalendarEvents
+    getCalendarEvents,
+    updateCalendarEvent,
+    deleteCalendarEvent,
+    TavilyWebSearch
 ]
 
+const checkpointer = new MemorySaver()
 
 
 const model = new ChatGroq({
@@ -45,24 +52,48 @@ const graph = new StateGraph(MessagesAnnotation).addNode("callModel", callModel)
         toolNode: "toolNode"
     })
 
-const app = graph.compile()
+const app = graph.compile({
+    checkpointer
+})
 
 async function main() {
-    const result = await app.invoke({
-        messages: [
-            // { role: "user", content: "Is there any meeting tommorrow" }
-            // {
-            //     role: "user",
-            //     content: "Create a event in my calendar with patrajyotishankar@gmail.com tommorrow at 9am called Design Frontend discussion "
-            // }
-            {
-                role: "user",
-                content: "How many events i have tommorrow in my calendar"
-            }
-        ]
-    })
-    console.log('AI: ', result.messages[result.messages.length - 1]?.content);
+    const config = {
+        configurable: {
+            thread_id: "1"
+        }
+    }
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+    while (true) {
+        const userInput = await rl.question("You: ");
+        if (userInput === "exit") {
+            break;
+        }
+        const currentDateTime = new Date().toLocaleString("sv-SE").replace(" ", "T");
+        const timeZoneString = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const result = await app.invoke({
+            messages: [
+                {
+                    role: "system",
+                    content: `
+                        You are a smart personal assistant. Your name is CAL AI 
+                    - You should avoid to create or update calendar events that is before the current datetime. 
+
+                        current datetime: ${currentDateTime}   
+                        timezone: ${timeZoneString}
+                    `
+                }
+                , {
+                    role: "user",
+                    content: userInput
+                }
+            ]
+        }, config)
+        console.log(`AI: ${result.messages?.[result.messages.length - 1]?.content ?? 'No messages found'}`);
+    }
+    rl.close()
 }
 
 main()
-

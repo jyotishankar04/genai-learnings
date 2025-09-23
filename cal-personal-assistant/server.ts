@@ -42,6 +42,7 @@ app.get('/google/callback', async (req, res) => {
     res.send("Connected. You can close the tab now.");
 })
 
+
 app.listen(3000, () => {
     console.log("Server started on port 3000")
 })
