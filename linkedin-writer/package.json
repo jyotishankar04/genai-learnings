@@ -1,0 +1,20 @@
+{
+  "name": "linkedin-writer",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.78",
+    "@langchain/groq": "^0.2.4",
+    "@langchain/langgraph": "^0.4.9"
+  }
+}

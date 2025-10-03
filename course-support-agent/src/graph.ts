@@ -39,7 +39,7 @@ const frontdeskSupportAgent = async (state: typeof StateAnnotation.State) => {
         ...state.messages
     ])
 
-    const CATEGORIZATION_SYSTEM_PROMPT = `You are a export customer support routing system.
+    const CATEGORIZATION_SYSTEM_PROMPT = `You are a expert customer support routing system.
         Your job is to detect weather a customer support representative is routing a user to a marketing team or learning support team, or if they are just responding conversationally`
 
     const CATEGORIZATION_HUMAN_PROMPT = `
@@ -119,7 +119,7 @@ const learningSupportAgent = async (state: typeof StateAnnotation.State) => {
         trimmedHistory.pop()
     }
     const llmWithTools = model.bindTools(learningTools)
-    const learningResponse =await llmWithTools.invoke([{
+    const learningResponse = await llmWithTools.invoke([{
         role: "system",
         content: SYSTEM_PROMPT
     },
@@ -178,7 +178,7 @@ const graph = new StateGraph(StateAnnotation)
     })
 
 
-const app = graph.compile({checkpointer})
+const app = graph.compile({ checkpointer })
 
 export default app
 

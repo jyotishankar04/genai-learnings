@@ -41,7 +41,6 @@ const conditionalEdge = (state: typeof MessagesAnnotation.State) => {
     }
     return "__end__"
 }
-
 // Build the graph
 const graph = new StateGraph(MessagesAnnotation).addNode("callModel", callModel)
     .addNode("toolNode", toolNode)
