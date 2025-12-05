@@ -1,5 +1,5 @@
 import { createAgent } from "langchain";
-import {createCalendarEvent, getAvailableTimeSlots, sendEmail} from "./tools.ts";
+import {createCalendarEvent, getAvailableTimeSlots, getContacts, manageContactTool, manageEmailTool, scheduleEventTool, sendEmail} from "./tools.ts";
 import {model} from "./model.ts";
 
 const CALENDAR_AGENT_PROMPT = `
@@ -34,4 +34,34 @@ const emailAgent = createAgent({
 });
 
 
-export {calendarAgent};
+
+// Contact agent
+const CONTACT_AGENT_PROMPT = `
+    You are an contact agent.
+    Find or create contact records as per requirement.
+    Use get_contacts to get the contact list.
+`.trim();
+
+const contactAgent = createAgent({
+    model: model,
+    tools: [getContacts],
+    systemPrompt: CONTACT_AGENT_PROMPT,
+});
+
+
+const SUPERVISOR_PROMPT = `
+You are a helpful personal assistant.
+You can schedule calendar events and send emails.
+You will get contact information from contact tool before sending emails.
+Break down user requests into appropriate tool calls and coordinate the results.
+When a request involves multiple actions, use multiple tools in sequence.
+`.trim();
+
+const supervisorAgent = createAgent({
+  model: model,
+  tools: [scheduleEventTool, manageEmailTool, manageContactTool],
+  systemPrompt: SUPERVISOR_PROMPT,
+});
+
+
+export {calendarAgent,emailAgent,contactAgent,supervisorAgent};
