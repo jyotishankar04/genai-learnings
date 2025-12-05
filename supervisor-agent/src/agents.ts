@@ -1,6 +1,7 @@
 import { createAgent } from "langchain";
 import {createCalendarEvent, getAvailableTimeSlots, getContacts, manageContactTool, manageEmailTool, scheduleEventTool, sendEmail} from "./tools.ts";
 import {model} from "./model.ts";
+import { MemorySaver } from "@langchain/langgraph";
 
 const CALENDAR_AGENT_PROMPT = `
 You are a calendar scheduling assistant.
@@ -56,11 +57,12 @@ You will get contact information from contact tool before sending emails.
 Break down user requests into appropriate tool calls and coordinate the results.
 When a request involves multiple actions, use multiple tools in sequence.
 `.trim();
-
+const checkpointer = new MemorySaver();
 const supervisorAgent = createAgent({
   model: model,
   tools: [scheduleEventTool, manageEmailTool, manageContactTool],
   systemPrompt: SUPERVISOR_PROMPT,
+  checkpointer,
 });
 
 
