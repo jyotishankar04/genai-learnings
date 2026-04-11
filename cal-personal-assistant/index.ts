@@ -31,6 +31,7 @@ const callModel = async (state: typeof MessagesAnnotation.State) => {
     return { messages: [response] }
 }
 
+
 // Tool node
 const toolNode = new ToolNode(tools)
 const conditionalEdge = (state: typeof MessagesAnnotation.State) => {
