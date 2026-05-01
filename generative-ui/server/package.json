@@ -1,0 +1,18 @@
+{
+	"name": "expenses-agent",
+	"version": "1.0.0",
+	"description": "Expenses Agent",
+	"main": "index.ts",
+	"scripts": {
+		"start": "node index.ts"
+	},
+	"type": "module",
+	"dependencies": {
+		"@langchain/core": "^1.1.41",
+		"@langchain/langgraph": "^1.2.9",
+		"@langchain/openai": "^1.4.4",
+		"@types/node": "^25.6.0",
+		"langchain": "^1.3.4",
+		"zod": "^4.3.6"
+	}
+}

@@ -5,3 +5,4 @@ dist
 **/dist/**
 **/.env.*
 **/.env
+generative-ui/client/src/components/ChatBubble.tsx
