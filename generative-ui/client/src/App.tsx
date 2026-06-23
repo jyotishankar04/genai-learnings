@@ -7,6 +7,9 @@ import {
   type Message,
   type SuggestionPrompt,
 } from "./components";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
+import type { StreamMessage } from "./components/types";
+
 
 const APP_NAME = "Expense Tracker";
 const APP_DESCRIPTION =
@@ -42,7 +45,45 @@ const SUGGESTIONS: SuggestionPrompt[] = [
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
 
+  const sendQuery = async (query: string) => {
+    setMessages((prev) => [...prev, {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    }]);
+
+    setIsThinking(true);
+      await fetchEventSource("http://localhost:3000/chat", {
+        method: "POST",
+        body: JSON.stringify({
+          message: query,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        onmessage: (event) => {
+          setIsThinking(false);
+          const streamMessage: StreamMessage = JSON.parse(event.data);
+          const messagePayload = streamMessage.payload;
+          if (messagePayload.type === "assistant") {
+            setMessages((prev) => {
+              const newMessages = [...prev];
+              newMessages[newMessages.length - 1] = {
+                ...(newMessages[newMessages.length - 1] as Message),
+                content:
+                  newMessages[newMessages.length - 1]?.content +
+                  messagePayload.payload.content,
+              };
+              return newMessages;
+            });
+          }
+        },
+      });
+    
+  };
   const handleSendMessage = (text?: string) => {
     const content = text ?? inputValue;
     if (!content.trim()) return;
@@ -53,16 +94,10 @@ export default function App() {
       content,
       timestamp: new Date(),
     };
+    setMessages((prev) => [...prev, userMessage]);
 
-    const assistantMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content:
-        "I can help you track expenses! Tell me what you'd like to do — add an expense, view transactions, or set a budget.",
-      timestamp: new Date(),
-    };
+    sendQuery(content);
 
-    setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setInputValue("");
   };
 
@@ -83,7 +118,7 @@ export default function App() {
             onSuggestionClick={handleSuggestion}
           />
         ) : (
-          <ChatArea messages={messages} />
+          <ChatArea isThinking={isThinking} messages={messages} />
         )}
 
         <ChatInput

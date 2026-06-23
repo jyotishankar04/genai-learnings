@@ -3,10 +3,11 @@ import type { Message } from "./types";
 import { ChatBubble } from "./ChatBubble";
 
 interface ChatAreaProps {
+  isThinking: boolean;
   messages: Message[];
 }
 
-export function ChatArea({ messages }: ChatAreaProps) {
+export function ChatArea({ isThinking, messages }: ChatAreaProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -16,8 +17,16 @@ export function ChatArea({ messages }: ChatAreaProps) {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-3xl mx-auto px-6 py-8 space-y-4">
-        {messages.map((message) => (
-          <ChatBubble key={message.id} message={message} />
+        {messages.map((message, index) => (
+          <ChatBubble
+            key={message.id}
+            message={message}
+            isThinking={
+              isThinking &&
+              index === messages.length - 1 &&
+              message.role === "assistant"
+            }
+          />
         ))}
         <div ref={bottomRef} />
       </div>
